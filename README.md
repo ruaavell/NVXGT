@@ -1,145 +1,322 @@
-# VIctory on an NVIDIA-RTX-2060
+# NVXGT — NVIDIA RTX 2060 Compatibility Project
 
-A fork of [VIctory](https://github.com/Marvisak/VIctory), a compatibility layer
-that runs an Xbox Series title natively on Windows from files the user supplies.
+<p align="center">
+  <img
+    src="https://github.com/user-attachments/assets/6ed5ec01-fe0a-4ff3-81a0-e9db5ef671b4"
+    alt="NVXGT Project Logo"
+    width="280"
+  />
+</p>
 
-## The goal
+**NVXGT** is an NVIDIA-focused development fork of [VIctory](https://github.com/Marvisak/VIctory), a compatibility layer designed to run an Xbox Series title natively on Windows using game files supplied by the user.
 
-**A stable 30 fps or more without ray tracing, then as high a frame rate and as
-low frame times as the PC allows**, on an AMD RX 7900 XTX first and on PCs with
-32 GB (later 16 GB) of RAM.
+This fork focuses on auditing, adapting, and optimizing the project for NVIDIA GPUs, with the **GeForce RTX 2060 (6 GB VRAM)** as its primary development and validation target.
 
-The way there is **porting, not emulating**: patching the title's renderer so it
-behaves the way a PC renderer does, rather than having the layer watch and copy
-the console's shared memory every frame. Shaders are translated ahead of time
-into a versioned store that is kept between builds. Ray tracing stays optional
-and off by default. The picture comes after the frame rate: texture pop-in and
-lighting that is too bright or too dark when walking indoors are next in line.
+The long-term objective is to make the project stable, efficient, and accessible on NVIDIA-based gaming PCs.
 
-**This repository contains no game files, code or assets.** You need your own
-copy of the game. It is not affiliated with or endorsed by the game's developer
-or publisher.
+---
 
-## Where it stands (2026-11-26)
+## Project Goals
 
-Tested on one machine only: Windows 11, Intel i9-12900K, 64 GB RAM, Radeon
-RX 7900 XTX, the Series X profile, ray tracing off.
+The primary development target is the **NVIDIA GeForce RTX 2060**.
 
-| | |
+Our priorities are:
+
+1. Audit the existing codebase and identify AMD-specific assumptions.
+2. Establish NVIDIA GPU compatibility.
+3. Fix rendering, synchronization, memory management, and shader translation issues.
+4. Optimize CPU and GPU workloads.
+5. Reduce frame times, stuttering, and VRAM consumption.
+6. Improve visual consistency and rendering stability.
+7. Establish a reproducible performance baseline.
+
+### Performance Philosophy
+
+**Stability first. Performance second. Visual quality third.**
+
+The initial objective is to achieve a stable 30 FPS experience where hardware and software limitations allow it, without ray tracing.
+
+Further optimization will target:
+- Consistent frame pacing.
+- Lower GPU and CPU overhead.
+- Reduced shader compilation stutter.
+- Efficient VRAM allocation.
+- Faster resource uploads and synchronization.
+- Improved texture streaming.
+- Optional advanced rendering features.
+
+No unverified performance figures are presented as achieved results.
+
+---
+
+## Target Hardware
+
+| Component | Primary target |
 |---|---|
-| City street, renderer patches 1+2 on | about 53 ms a frame (about 19 fps) |
-| Same scene before the patches | 57-75 ms (13-17 fps) |
-| Shaders the title uses that translate | all of them (25,790 of 25,985; the rest are unused geometry shaders) |
-| Memory | about 35 GB of private memory: **64 GB of RAM recommended** for now |
+| GPU | NVIDIA GeForce RTX 2060 |
+| GPU Architecture | Turing |
+| VRAM | 6 GB |
+| GPU Vendor | NVIDIA |
+| API | Direct3D 12 |
+| Operating System | Windows 10 / 11 x64 |
+| CPU | AVX2-capable processor |
+| Memory | 16 GB minimum target, 32 GB recommended target |
 
-It started at 280 ms a frame in the same scenes three days earlier.
+Actual compatibility requirements will be established through hardware and feature-level testing.
 
-### Renderer patches (off by default while they are tested)
+### NVIDIA Compatibility Focus
 
-| Switch | What it does |
+The RTX 2060 is the primary reference GPU for this fork.
+
+Development will investigate:
+
+- NVIDIA Direct3D 12 driver behavior.
+- Shader Model and mesh shader support.
+- DXGI adapter selection.
+- NVIDIA-specific GPU synchronization behavior.
+- Resource barriers and descriptor management.
+- VRAM allocation and memory pressure.
+- Pipeline State Object creation and caching.
+- Shader translation and compilation performance.
+
+Features will only be considered supported after validation on actual NVIDIA hardware.
+
+---
+
+## Development Status
+
+**Audit phase — 2026-11-26**
+
+The project is currently in its initial NVIDIA compatibility audit phase.
+
+The existing upstream and AMD-oriented implementations are being examined to identify platform assumptions, GPU-specific optimizations, rendering dependencies, and potential compatibility issues.
+
+| Area | Status |
 |---|---|
-| `VICTORY_PORT_CONSTANTS=1` | The title's 174 MB constants heap is read by the card where the title writes it: no uploads, no fills |
-| `VICTORY_PORT_DESCRIPTORS=1` | The title's descriptor-table stores are patched (byte-checked) to report the slots they write, instead of a scan of ~600,000 slots a frame |
+| Codebase audit | In progress |
+| NVIDIA compatibility analysis | Planned |
+| RTX 2060 hardware validation | Pending |
+| Direct3D 12 compatibility | Under investigation |
+| Shader translation validation | Pending |
+| VRAM optimization | Planned |
+| Rendering stability | Pending |
+| CPU/GPU performance profiling | Planned |
+| 30 FPS target | Not yet achieved or verified |
 
-What is known to be wrong:
+**Important:** No RTX 2060 performance benchmark or compatibility result should be considered confirmed until tested on physical hardware.
 
-- Trees, signs and far objects flicker in the distance in some places.
-- Lighting is too bright or too dark after walking indoors, until the title has
-  run for a while; rooms with little direct light are too dark without `-RayTracing`.
-- Textures of what just came into view appear late while the title streams.
-- The first run of a new build stutters while the driver makes pipelines
-  (`victory warm` makes them ahead).
-- Recording a frame in the world makes the title's own watchdog end it.
+---
 
-## How to run it
+## Development Roadmap
 
-You need Windows 10/11 x64, a CPU with AVX2, a Direct3D 12 GPU with shader
-model 6.6 and mesh shaders, Rust (the toolchain is pinned), the MSVC build
-tools, and your own dump of the title.
+### Phase 1 — Codebase Audit
+
+- Examine the upstream VIctory architecture.
+- Identify AMD-specific code and assumptions.
+- Review Direct3D 12 implementation.
+- Analyze shader translation and compilation.
+- Examine resource management and synchronization.
+- Identify potential NVIDIA driver compatibility issues.
+- Document performance bottlenecks.
+
+### Phase 2 — NVIDIA Compatibility
+
+- Validate NVIDIA adapter detection.
+- Verify required Direct3D 12 capabilities.
+- Investigate shader compilation compatibility.
+- Validate descriptor and resource management.
+- Test GPU synchronization and barriers.
+- Resolve NVIDIA-specific rendering issues.
+
+### Phase 3 — RTX 2060 Optimization
+
+- Optimize VRAM usage for the 6 GB memory budget.
+- Reduce unnecessary CPU-GPU synchronization.
+- Improve asynchronous resource handling.
+- Optimize shader and pipeline caching.
+- Investigate CPU-side bottlenecks.
+- Reduce frame-time spikes and stuttering.
+
+### Phase 4 — Rendering Stability
+
+- Investigate lighting inconsistencies.
+- Fix texture streaming delays.
+- Address geometry and object flickering.
+- Improve resource lifetime management.
+- Validate rendering consistency across different environments.
+
+### Phase 5 — Performance Validation
+
+- Establish reproducible benchmarks.
+- Compare performance before and after each optimization.
+- Measure average FPS and frame times.
+- Record GPU utilization and VRAM consumption.
+- Test different graphics configurations.
+- Work toward stable 30 FPS or better where achievable.
+
+---
+
+## Architecture and Optimization Priorities
+
+NVXGT follows the original project's compatibility-layer approach rather than attempting to emulate an entire Xbox console.
+
+The development focus is on improving how the existing runtime handles rendering, resource management, shader translation, and GPU execution on NVIDIA hardware.
+
+Key investigation areas include:
+
+- **Command Processing:** Reduce unnecessary overhead in command recording and submission.
+- **Asynchronous Execution:** Investigate opportunities to distribute CPU workloads.
+- **Shader Translation:** Improve translation compatibility and persistent shader caching.
+- **Resource Management:** Reduce redundant transfers and synchronization.
+- **Descriptor Management:** Optimize descriptor access and update operations.
+- **Memory Management:** Keep GPU memory consumption within practical hardware limits.
+- **Pipeline Caching:** Reduce compilation overhead and first-run stuttering.
+
+Upstream optimizations will be evaluated individually rather than assumed to work identically on NVIDIA hardware.
+
+---
+
+## Building and Running
+
+### Requirements
+
+The expected development environment includes:
+
+- Windows 10/11 x64.
+- NVIDIA GeForce RTX 2060 or another supported Direct3D 12 GPU.
+- A compatible NVIDIA driver.
+- Rust toolchain.
+- MSVC build tools.
+- Git.
+- A legally obtained copy of the game.
+
+Specific GPU feature requirements must be verified against the selected hardware and driver.
+
+### Clone the Repository
 
 ```powershell
-git clone https://github.com/avatarmanz/VIctory-7900XTX
-cd VIctory-7900XTX
-copy victory.example.toml victory.toml      # then set your paths, outside this folder
+git clone https://github.com/ruaavell/VIctory---NVIDIA-RTX-2060.git
+
+cd VIctory---NVIDIA-RTX-2060
+```
+
+### Initial Configuration
+
+```powershell
+copy victory.example.toml victory.toml
+```
+
+Configure the required paths in `victory.toml`.
+
+### Build
+
+```powershell
 cargo build --locked --profile diag -p victory --features diagnostics
-scripts\play.ps1 -Exe <path of your copy's executable>
 ```
 
-`scripts\play.ps1 -Safe` leaves out the newest, faster ways; try it first when
-something is wrong. `-RayTracing` turns the title's ray-traced indirect light on.
+### NVIDIA Adapter Selection
 
-On the RTX 2060 target, `Play-VIctory.cmd pareto-residency` starts the title
-with the Series S profile and the face-fix switches: card-resident buffers
-(`VICTORY_CARD_BUFFERS_MIN_KB`, `VICTORY_CARD_BUFFERS_MB`), levels on demand,
-no raw view twins (`VICTORY_RAW_VIEWS=0`), every barrier waiting
-(`VICTORY_GROUP_SYNC=2`), strict local waves (`VICTORY_WAVE_LOCAL=idiom`), wide
-waves left off (`VICTORY_WAVE_WIDE` unset), and the pipeline book
-(`VICTORY_PIPELINE_BOOK=1`).
+The runtime's adapter selection mechanism will be validated during the NVIDIA compatibility phase.
 
-On a hybrid-graphics PC, the runtime and offline pipeline checks prefer a
-high-performance adapter with Shader Model 6.6. The runtime logs its adapter
-name, PCI vendor and device IDs, and dedicated VRAM. Set
-`VICTORY_D3D12_ADAPTER` to a zero-based DXGI index or part of the adapter's
-name to select it explicitly. With the launcher, pass
-`-More @{VICTORY_D3D12_ADAPTER='NVIDIA'}`.
-
-Before the first run, ahead of time (both can be stopped and go on later):
+Where supported by the existing launcher:
 
 ```powershell
-target\diag\victory.exe shaders <the shader archives>   # every shader translated, minutes
-target\diag\victory.exe warm --used                     # pipelines earlier runs drew with, for a new driver or build
+scripts\play.ps1 -More @{VICTORY_D3D12_ADAPTER='NVIDIA'}
 ```
 
-Commands, debugging switches and upstream's own description:
-[docs/README-fxceless.md](docs/README-fxceless.md). Every `VICTORY_...` switch is
-described in a comment where it is read.
+Actual adapter selection and GPU feature support must be confirmed through runtime logs.
 
-## What is different here
+---
 
-In short; the reasons and the measurements are in [docs/findings.md](docs/findings.md).
+## Benchmarking and Testing
 
-- **List calls are written down, not carried out, on the title's threads**
-  (`VICTORY_THIN`): eight threads of ours translate them.
-- **Submissions are prepared by a thread of ours and joined**
-  (`VICTORY_ASYNC_SUBMIT`, `VICTORY_JOIN_PARTS`), with what can be spread over
-  threads spread: refreshes, compares (AVX2), descriptor records, landings.
-- **What shaders wrote comes back beside the write guards**, by the dwords that
-  changed, on a thread of its own (`VICTORY_RELAY`, `VICTORY_LAND`).
-- **Buffer fills that need bytes still on the card are done on the card**
-  (`VICTORY_CARD_STEPS`) instead of waiting for it.
-- **The title's writes are caught more cheaply**: one view opened at a fault,
-  blocks that rest, places in the title's code that look before they write.
-- **Textures go up on a copy queue of their own** and a slot shows one only after
-  its upload ran, which also ended a device loss that came every 15 minutes or so.
-- **Boats float**: textures that shaders write and the title's CPU reads go back
-  to title memory (from fxceless and Geckomacabre, on by default here).
-- **Frame record and replay** with per-pass times and shader variants compared
-  turn by turn ([docs/replay.md](docs/replay.md)).
+All performance claims must be backed by reproducible tests.
 
-## Credits
+| Metric | Purpose |
+|---|---|
+| Average FPS | Overall performance |
+| Frame time (ms) | Frame pacing and consistency |
+| 1% lows | Performance stability |
+| GPU utilization | GPU workload analysis |
+| VRAM usage | Memory pressure |
+| System RAM usage | Total memory requirements |
+| Shader compilation time | First-run performance |
+| Stuttering frequency | Real-world smoothness |
 
-This is a tree of other people's work with more on top. The history is kept, and
-commits taken from elsewhere name the commit and its author.
+Benchmark results should include hardware specifications, driver version, game settings, rendering configuration, and test location.
 
-- **[VIctory](https://github.com/Marvisak/VIctory)** by Marvisak and its
-  contributors: the loader, the runtime services, the Direct3D 12 back end and
-  the shader recompiler.
-- **[fxceless/victory-fork](https://github.com/fxceless/victory-fork)**: the fork
-  this one started from, and the people whose pull requests it carries.
-- **[DexNom/VIctory](https://github.com/DexNom/VIctory)**: ray tracing fixes,
-  cube gradients, sparse textures.
-- **[Belobug/VIctory-Belobug-AMD](https://github.com/Belobug/VIctory-Belobug-AMD)**:
-  the ambient light idea, pipeline workers, and work by romainhedouin.
-- **[FQY55kai/ZJOU-VICTORY](https://github.com/FQY55kai/ZJOU-VICTORY)**.
-- **[myokex/victory-amd](https://github.com/myokex/victory-amd)**: the guard over
-  every view of a page (with Spexivus, joroyt and tightfall), and Joshua Odom's
-  reads into title memory.
-- **Geckomacabre** and **cxy0072019-sketch**: the texture read-back.
-- **[XCL](https://github.com/ivall/xcl)** (GPL-2.0-only) was read for how the same
-  title behaves under another layer; no code of it is here.
-- This fork's changes were made with [Claude Code](https://claude.com/claude-code).
+---
+
+## Repository Structure
+
+The repository follows the original VIctory project architecture.
+
+Relevant areas include:
+
+- `crates/` — Runtime and supporting components.
+- `docs/` — Technical documentation and investigation notes.
+- `scripts/` — Build, launch, and development scripts.
+- `target/` — Generated build output.
+
+The exact structure may evolve as the NVIDIA compatibility work progresses.
+
+---
+
+## Project Principles
+
+- NVIDIA hardware compatibility is the primary development focus.
+- Performance improvements must be measurable.
+- Stability takes priority over experimental optimizations.
+- Experimental patches must remain reversible.
+- Existing upstream functionality should be preserved where possible.
+- Hardware-specific assumptions must be documented.
+- No unsupported compatibility claims.
+- Reproducible testing is preferred over speculative optimization.
+
+---
+
+## Credits and Acknowledgements
+
+NVXGT builds upon the work of the original VIctory project and several community forks.
+
+We acknowledge the contributions of:
+
+- [Marvisak/VIctory](https://github.com/Marvisak/VIctory) — Original project, runtime architecture, Direct3D 12 backend, and shader recompiler.
+- [fxceless/victory-fork](https://github.com/fxceless/victory-fork) — Previous fork and inherited contributions.
+- [DexNom/VIctory](https://github.com/DexNom/VIctory) — Rendering and ray-tracing related improvements.
+- [Belobug/VIctory-Belobug-AMD](https://github.com/Belobug/VIctory-Belobug-AMD) — AMD-oriented optimizations and rendering improvements.
+- [FQY55kai/ZJOU-VICTORY](https://github.com/FQY55kai/ZJOU-VICTORY).
+- [myokex/victory-amd](https://github.com/myokex/victory-amd) — Memory and resource-management contributions.
+- Other developers and contributors whose work is preserved in the inherited commit history.
+
+NVXGT aims to preserve attribution and maintain the project's development history.
+
+---
+
+## Legal Notice
+
+This repository does not contain game files, copyrighted game assets, or proprietary game content.
+
+Users must provide their own legally obtained game files.
+
+NVXGT is an independent community development project. It is not affiliated with, endorsed by, or sponsored by NVIDIA, Microsoft, Xbox, or the game's developer or publisher.
+
+All original third-party licenses and attribution requirements must be respected.
+
+---
 
 ## License
 
-GPL-3.0-or-later, as VIctory. See [LICENSE](LICENSE); the one file that is not
-covered is named in [docs/asset-policy.md](docs/asset-policy.md).
+GPL-3.0-or-later, inherited from the original VIctory project, subject to the licenses of individual components.
+
+See [LICENSE](LICENSE) and the relevant documentation for details.
+
+<p align="center">
+
+**NVXGT**
+
+*Built for NVIDIA. Optimized for Performance.*
+
+**RTX 2060 — Our First Target.**
+
+</p>
